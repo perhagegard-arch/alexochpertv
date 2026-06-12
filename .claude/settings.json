@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "if git status --porcelain CLAUDE.md 2>/dev/null | grep -q .; then git add CLAUDE.md && git commit -m \"Uppdatera CLAUDE.md\"; fi",
+            "statusMessage": "Kontrollerar CLAUDE.md..."
+          }
+        ]
+      }
+    ]
+  }
+}
