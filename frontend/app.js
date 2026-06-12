@@ -1,4 +1,5 @@
 import { renderQuoteCard } from "./widgets/QuoteWidget.js";
+import { renderWeatherCard } from "./widgets/WeatherWidget.js";
 
 const POLL_BUFFER_MS = 500;
 
@@ -11,6 +12,7 @@ let lastId = null;
 
 const renderers = {
   quote: renderQuoteCard,
+  weather: renderWeatherCard,
 };
 
 async function fetchCard() {
