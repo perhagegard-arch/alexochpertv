@@ -1,5 +1,6 @@
 import { renderQuoteCard } from "./widgets/QuoteWidget.js";
 import { renderWeatherCard } from "./widgets/WeatherWidget.js";
+import { renderBirthdayCard } from "./widgets/BirthdayWidget.js";
 
 const POLL_BUFFER_MS = 500;
 
@@ -13,6 +14,7 @@ let lastId = null;
 const renderers = {
   quote: renderQuoteCard,
   weather: renderWeatherCard,
+  birthday: renderBirthdayCard,
 };
 
 async function fetchCard() {
@@ -25,7 +27,7 @@ async function fetchCard() {
 function applyCard(layer, card) {
   layer.style.backgroundImage = card.background ? `url('${card.background}')` : "";
   const render = renderers[card.type];
-  layer.innerHTML = render ? render(card.content) : "";
+  layer.innerHTML = render ? render(card.content, "hero") : "";
 }
 
 async function showNext() {
@@ -51,3 +53,32 @@ async function showNext() {
 }
 
 showNext();
+
+const ZONE_IDS = ["left-top", "left-bottom", "right-top", "right-bottom"];
+const zoneLastId = {};
+
+async function showZone(zoneId) {
+  const el = document.getElementById(`zone-${zoneId}`);
+  let card;
+  try {
+    const url = zoneLastId[zoneId] != null
+      ? `/api/zone/${zoneId}?ignore=${zoneLastId[zoneId]}`
+      : `/api/zone/${zoneId}`;
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    card = await resp.json();
+  } catch (err) {
+    console.error(`Kunde inte hämta zon ${zoneId}:`, err);
+    setTimeout(() => showZone(zoneId), 10_000);
+    return;
+  }
+
+  if (card.content?.id != null) zoneLastId[zoneId] = card.content.id;
+
+  const render = renderers[card.type];
+  el.innerHTML = render ? render(card.content, "compact") : "";
+
+  setTimeout(() => showZone(zoneId), card.display_seconds * 1000 + POLL_BUFFER_MS);
+}
+
+ZONE_IDS.forEach(showZone);

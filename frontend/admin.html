@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fikarums-TV – Admin</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <main id="admin-root">
+    <section id="login-view">
+      <h1>Logga in</h1>
+      <form id="login-form">
+        <input type="password" id="password" placeholder="Lösenord" autocomplete="current-password" required>
+        <button type="submit">Logga in</button>
+        <p id="login-error" class="error" hidden></p>
+      </form>
+    </section>
+
+    <section id="panel-view" hidden>
+      <header>
+        <h1>Fikarums-TV – Admin</h1>
+        <button id="logout-button" type="button">Logga ut</button>
+      </header>
+
+      <section id="widgets-section">
+        <h2>Mitten (rotation)</h2>
+        <ul id="widgets-list"></ul>
+      </section>
+
+      <section id="zones-section">
+        <h2>Fasta zoner</h2>
+        <ul id="zones-list"></ul>
+      </section>
+
+      <section id="birthday-section" hidden>
+        <h2>Födelsedagar</h2>
+        <p class="hint">Klistra in en person per rad: namn samt månad och dag, tab- eller kommaseparerat (t.ex. från Google Sheets).</p>
+        <textarea id="birthday-textarea" rows="12" placeholder="Anna Andersson&#9;16&#9;8"></textarea>
+        <button id="save-birthdays-button" type="button">Spara</button>
+        <div id="birthday-preview"></div>
+      </section>
+    </section>
+  </main>
+  <script type="module" src="admin.js"></script>
+</body>
+</html>

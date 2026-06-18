@@ -1,11 +1,15 @@
 from pathlib import Path
 from flask import Flask, send_from_directory
 from .api import api
+from .admin import admin
+from .config import SECRET_KEY
 
 FRONTEND_DIR = str(Path(__file__).parent.parent / "frontend")
 
 app = Flask(__name__)
+app.secret_key = SECRET_KEY
 app.register_blueprint(api)
+app.register_blueprint(admin)
 
 
 @app.route("/")

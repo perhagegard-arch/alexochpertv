@@ -8,8 +8,38 @@ html, body {
 }
 
 #dashboard {
-  position: relative;
   width: 100%; height: 100%;
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  grid-template-areas:
+    "lt center rt"
+    "lb center rb";
+  gap: 0.75rem;
+  padding: 0.75rem;
+}
+
+#zone-left-top { grid-area: lt; }
+#zone-left-bottom { grid-area: lb; }
+#zone-right-top { grid-area: rt; }
+#zone-right-bottom { grid-area: rb; }
+
+.zone-center {
+  grid-area: center;
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+.zone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  overflow: hidden;
+  padding: 1rem;
 }
 
 .card-layer {
@@ -139,4 +169,93 @@ html, body {
 .forecast-temps {
   font-size: 0.9rem;
   opacity: 0.9;
+}
+
+/* --- Birthday card --- */
+.birthday-card {
+  min-width: 420px;
+  padding: 2.5rem 3.5rem;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 14px;
+  color: #fff;
+  text-align: center;
+  backdrop-filter: blur(8px);
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+
+.birthday-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+}
+
+.birthday-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.birthday-person {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2rem;
+  font-size: 1.2rem;
+}
+
+.birthday-label {
+  font-size: 0.95rem;
+  opacity: 0.7;
+}
+
+/* --- Compact läge (fasta zoner) --- */
+.quote-card.compact,
+.weather-card.compact,
+.birthday-card.compact {
+  background: none;
+  backdrop-filter: none;
+  padding: 0;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.quote-card.compact .quote-text {
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+}
+.quote-card.compact .quote-author {
+  font-size: 0.85rem;
+}
+.quote-card.compact .quote-company {
+  display: none;
+}
+
+.weather-card.compact .weather-location {
+  font-size: 0.75rem;
+  margin-bottom: 0.4rem;
+}
+.weather-card.compact .weather-icon {
+  font-size: 2.2rem;
+}
+.weather-card.compact .weather-temp {
+  font-size: 2.4rem;
+}
+.weather-card.compact .weather-desc,
+.weather-card.compact .weather-wind,
+.weather-card.compact .weather-forecast {
+  display: none;
+}
+
+.birthday-card.compact .birthday-title {
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+}
+.birthday-card.compact .birthday-person {
+  font-size: 0.95rem;
+  gap: 1rem;
+}
+.birthday-card.compact .birthday-fallback {
+  font-size: 0.95rem;
+  opacity: 0.7;
 }

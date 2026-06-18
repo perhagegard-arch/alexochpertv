@@ -1,5 +1,6 @@
-export function renderWeatherCard(content) {
+export function renderWeatherCard(content, mode = "hero") {
   const { location, current, forecast } = content;
+  const compactClass = mode === "compact" ? " compact" : "";
 
   const forecastHTML = forecast.map(d => `
     <div class="forecast-day">
@@ -10,7 +11,7 @@ export function renderWeatherCard(content) {
   `).join("");
 
   return `
-    <div class="weather-card">
+    <div class="weather-card${compactClass}">
       <p class="weather-location">${esc(location)}</p>
       <div class="weather-current">
         <span class="weather-icon">${current.icon}</span>

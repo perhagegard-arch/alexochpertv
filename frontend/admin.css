@@ -1,0 +1,138 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  background: #f4f4f5;
+  color: #222;
+  padding: 2rem;
+}
+
+#admin-root {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+h2 { font-size: 1.1rem; margin-bottom: 0.75rem; }
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+section {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+#login-view {
+  max-width: 320px;
+  margin: 4rem auto;
+}
+
+#login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+input, textarea, select {
+  font: inherit;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+textarea {
+  width: 100%;
+  font-family: 'Courier New', monospace;
+  resize: vertical;
+}
+
+button {
+  font: inherit;
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #fff;
+  cursor: pointer;
+}
+
+button:hover { background: #1d4ed8; }
+
+#logout-button {
+  background: #6b7280;
+}
+#logout-button:hover { background: #4b5563; }
+
+.error {
+  color: #b91c1c;
+  font-size: 0.9rem;
+}
+
+#widgets-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+#widgets-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+#widgets-list li:last-child { border-bottom: none; }
+
+#zones-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+#zones-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+#zones-list li:last-child { border-bottom: none; }
+
+#zones-list label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+}
+
+.hint {
+  font-size: 0.85rem;
+  color: #555;
+  margin-bottom: 0.75rem;
+}
+
+#birthday-textarea { margin-bottom: 0.75rem; }
+
+#birthday-preview {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+#birthday-preview .invalid-line {
+  color: #b91c1c;
+  font-family: 'Courier New', monospace;
+}

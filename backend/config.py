@@ -11,3 +11,8 @@ BACKGROUND_IMAGES = [
     for img in os.getenv("BACKGROUND_IMAGES", "bg_01.jpg").split(",")
     if img.strip()
 ]
+
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
+SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-satt-din-egen-i-env")
+
+STATE_FILE = Path(__file__).parent.parent / "data" / "state.json"
