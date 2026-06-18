@@ -10,22 +10,22 @@ En modulär dashboard-plattform för en fikarums-TV som körs på en Raspberry P
 
 Systemet består av fyra delar:
 
-1. **Frontend (HTML/JS/CSS):** En container som roterar mellan aktiva widgets, sköter animationer och uppdaterar innehåll.
+1. **Frontend (HTML/JS/CSS):** Skärmen är indelad i fem zoner: en stor mittzon som roterar mellan aktiva widgets (cross-fade, "hjälte"-läge) och fyra fasta zoner runtom (vänster topp/botten, höger topp/botten) som var och en alltid visar en admin-vald widget i ett kompakt läge.
 2. **Regelmotor (Backend/Python):** Avgör vilka kort som är aktuella baserat på tid, datum och prioritet (`backend/rules.py`, ej implementerad än — utöver det enkla 5-dagarsfönstret för födelsedagar, se nedan).
 3. **Datalager (Backend/Python):** Hämtar data från Google Sheets och serverar till frontenden via ett API (`backend/sheets.py`, ej implementerad än). Tills den finns klistras innehåll in manuellt via admin-panelen och sparas i `data/state.json`.
 4. **Widgets:** Varje widget är en fristående modul/klass. Den befintliga citat-appen kapslas in som `QuoteWidget` — den ska inte skrivas om, bara lyftas in.
-5. **Admin-panel (`/admin`):** Per kan logga in med ett delat lösenord, slå på/av widgets och redigera innehåll för widgets som har det (just nu bara födelsedagar). Toggle-state och inklistrad text sparas i `data/state.json` och respekteras av rotationen i `backend/api.py`.
+5. **Admin-panel (`/admin`):** Per kan logga in med ett delat lösenord, välja vilka widgets som ingår i mitt-rotationen, välja vilken widget varje fast zon visar, och redigera innehåll för widgets som har det (just nu bara födelsedagar). Allt sparas i `data/state.json` och respekteras av `backend/api.py`.
 
 ## Filstruktur
 
 ```
 backend/
   main.py              # Flask-app, startar servern (port 8080), registrerar api + admin
-  api.py               # GET /api/card?ignore=<id> — dynamisk rotation, respekterar toggles
-  admin.py             # Blueprint: /admin (sida) + /admin/api/* (login, widgets, birthdays)
+  api.py               # GET /api/card (mitt-rotation) + GET /api/zone/<id> (fast zon) — delar _build_card
+  admin.py             # Blueprint: /admin (sida) + /admin/api/* (login, widgets, zones, birthdays)
   auth.py              # login_required-decorator + lösenordskontroll (session-baserad)
   store.py             # JsonStore — läser/skriver data/state.json
-  widgets_registry.py  # Delad källa: vilka widget-typer finns, ordning, redigerbara eller inte
+  widgets_registry.py  # Delad källa: WIDGET_ORDER/WIDGETS samt ZONES/ZONE_IDS (de fyra fasta zonerna)
   birthdays.py          # parse_birthdays(), upcoming_within(), birthdays_today() — ren parsing-logik
   config.py            # Läser .env: QUOTES_API_URL, DISPLAY_SECONDS, BACKGROUND_IMAGES, ADMIN_PASSWORD, SECRET_KEY
   rules.py             # (stub) Regelmotor — generell regelmotor ej byggd än
@@ -37,23 +37,23 @@ backend/
   cards/
     quote_card.py      # Bygger card-JSON från provider-data
     weather_card.py
-    birthday_card.py   # Returnerar None om ingen har födelsedag inom 5 dagar
+    birthday_card.py   # Returnerar alltid kortet — content.people kan vara tom lista
 
 data/
-  state.json           # Körtids-state (widget-toggles + inklistrad födelsedagstext), gitignored
+  state.json           # Körtids-state (widget-toggles, zon-tilldelningar, inklistrad födelsedagstext), gitignored
 
 frontend/
-  index.html           # Shell med två .card-layer divs (A/B för cross-fade)
-  style.css            # Fullskärm, cross-fade via opacity-transition
-  app.js               # Pollar /api/card, roterar kort med cross-fade
+  index.html           # 5-zon-grid: zone-center (cross-fade, hjälte-läge) + 4 .zone-divs (kompakt läge)
+  style.css            # CSS-grid-layout + .compact-varianter av varje kortklass
+  app.js               # showNext() pollar /api/card (mitten), showZone() per fast zon pollar /api/zone/<id>
   images/              # Bakgrundsbilder (.jpg) — listas i .env
   widgets/
-    QuoteWidget.js     # Renderar HTML för citat-kortet
+    QuoteWidget.js     # render<Namn>Card(content, mode) — mode: "hero" | "compact"
     WeatherWidget.js
-    BirthdayWidget.js
-  admin.html            # Login + widget-toggles + textruta för födelsedagar
+    BirthdayWidget.js  # Visar reservtext i compact-läge om content.people är tom
+  admin.html            # Login + widget-toggles (mitten) + zon-dropdowns (fasta zoner) + textruta för födelsedagar
   admin.css             # Egen, enkel adminstil (separat från TV-kioskens style.css)
-  admin.js              # All admin-logik: login, toggles, spara/förhandsgranska födelsedagar
+  admin.js              # All admin-logik: login, toggles, zon-tilldelning, spara/förhandsgranska födelsedagar
 ```
 
 ## Starta lokalt
@@ -66,7 +66,7 @@ python -m backend.main # → http://localhost:8080 (admin: /admin)
 
 ## API
 
-**`GET /api/card?ignore=<id>`** — returnerar nästa kort att visa:
+**`GET /api/card?ignore=<id>`** — returnerar nästa kort för mitt-rotationen:
 
 ```json
 {
@@ -77,6 +77,8 @@ python -m backend.main # → http://localhost:8080 (admin: /admin)
 }
 ```
 
+**`GET /api/zone/<zone_id>?ignore=<id>`** — returnerar kortet för den widget som är tilldelad en fast zon (`zone_id` ∈ `left-top`/`left-bottom`/`right-top`/`right-bottom`). Samma kort-form som ovan, eller `{"type": "empty", ...}` om zonen saknar tilldelning. Frontend renderar alltid i `"compact"`-läge för dessa.
+
 ## Citattjänst
 
 Extern tjänst på `http://quotes.lkpg.cendio.se/api/quotes/random?ignore=<id>` — ska **inte** ändras, bara konsumeras.
@@ -86,21 +88,24 @@ Extern tjänst på `http://quotes.lkpg.cendio.se/api/quotes/random?ignore=<id>` 
 `GET /admin` — login-skyddad sida (delat lösenord, `ADMIN_PASSWORD` i `.env`, sessionscookie signerad med `SECRET_KEY`).
 
 - `POST /admin/api/login` `{password}` / `POST /admin/api/logout` / `GET /admin/api/session`
-- `GET /admin/api/widgets` → lista widgets med `enabled`-state (byggd från `widgets_registry.WIDGETS` + `store.py`)
+- `GET /admin/api/widgets` → lista widgets med `enabled`-state för **mitt-rotationen** (byggd från `widgets_registry.WIDGETS` + `store.py`)
 - `POST /admin/api/widgets/<id>/toggle` `{enabled: bool}`
+- `GET /admin/api/zones` → lista de fyra fasta zonerna med vilken widget (eller `null`) som är tilldelad
+- `POST /admin/api/zones/<zone_id>` `{widget: "quote"|"weather"|"birthday"|null}`
 - `GET /admin/api/birthdays` → `{raw: "..."}` (senast sparade inklistrade text)
 - `POST /admin/api/birthdays` `{raw: "..."}` → sparar och returnerar förhandsgranskning: `{count, today: [namn...], invalid: [rader...]}`
 
-Födelsedags-widgeten visas i TV-rotationen 5 dagar innan någon fyller år (alla inom fönstret visas samtidigt) och försvinner annars helt — ingen Sheets-integration än, bara den inklistrade texten.
+Födelsedags-widgeten visas i mitt-rotationen 5 dagar innan någon fyller år (alla inom fönstret visas samtidigt) och utesluts annars helt. En fast zon tilldelad födelsedagar visar däremot alltid kortet — `content.people` kan vara en tom lista, och `BirthdayWidget.js` visar då en reservtext ("Inga födelsedagar inom kort") istället för att vara tom. Ingen Sheets-integration än, bara den inklistrade texten.
 
 ## Lägga till en ny widget
 
 1. Skapa `backend/providers/<namn>.py` med en provider-klass.
-2. Skapa `backend/cards/<namn>_card.py` med en `build_<namn>_card(data)`-funktion. Returnera `None` om widgeten inte ska visas just nu (se `birthday_card.py`).
+2. Skapa `backend/cards/<namn>_card.py` med en `build_<namn>_card(data)`-funktion som **alltid** returnerar ett kort (reservinnehåll om datan är tom — fasta zoner ska aldrig bli blanka).
 3. Lägg till typen i `backend/widgets_registry.py` (`WIDGET_ORDER` + `WIDGETS`, ange om den är `editable`).
-4. Registrera typen i `backend/api.py` (rotation) och eventuellt `backend/admin.py` om den behöver eget redigeringsfält.
-5. Skapa `frontend/widgets/<Namn>Widget.js` med en `render<Namn>Card(content)`-funktion.
+4. Lägg till typen i `_build_card` i `backend/api.py`. Om widgeten bara ska delta i mitt-rotationen när den har något att visa (som födelsedagar), lägg den aktivitetskontrollen i `_active_rotation_types` — den gäller bara mitten, inte fasta zoner.
+5. Skapa `frontend/widgets/<Namn>Widget.js` med en `render<Namn>Card(content, mode = "hero")`-funktion som hanterar både `"hero"`- och `"compact"`-läge.
 6. Registrera renderaren i `frontend/app.js` under `renderers`.
+7. Eventuellt `backend/admin.py` om widgeten behöver eget redigeringsfält.
 
 ## Kodkonventioner
 
