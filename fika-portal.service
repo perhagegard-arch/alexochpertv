@@ -1,0 +1,15 @@
+[Unit]
+Description=Fika Portal – fikarums-TV
+After=network.target
+
+[Service]
+Type=simple
+User=__USER__
+WorkingDirectory=__REPO__
+ExecStart=__REPO__/start_portal.sh
+Restart=always
+RestartSec=5
+EnvironmentFile=__REPO__/.env
+
+[Install]
+WantedBy=multi-user.target

@@ -1,16 +1,44 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html, body {
+html {
   width: 100%; height: 100%;
   background: #111;
+}
+
+body {
+  width: 100%; height: 100%;
+  background: transparent;
   overflow: hidden;
   font-family: 'Georgia', serif;
 }
 
+.bg-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 2.5s ease;
+}
+
+.bg-layer.visible {
+  opacity: 1;
+}
+
+.bg-layer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+}
+
 #dashboard {
+  position: relative;
+  z-index: 1;
   width: 100%; height: 100%;
   display: grid;
-  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-columns: 1fr 3fr 1fr;
   grid-template-rows: 1fr 1fr;
   grid-template-areas:
     "lt center rt"
@@ -36,7 +64,8 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
   border-radius: 14px;
   overflow: hidden;
   padding: 1rem;
@@ -48,8 +77,6 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-size: cover;
-  background-position: center;
   opacity: 0;
   transition: opacity 1.2s ease;
 }

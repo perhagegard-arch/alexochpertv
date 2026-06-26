@@ -1,3 +1,6 @@
+import time
+import threading
+import requests as _requests
 from flask import Blueprint, jsonify, request
 from .providers.quotes import QuoteProvider
 from .providers.weather import WeatherProvider
@@ -7,10 +10,43 @@ from .cards.weather_card import build_weather_card
 from .cards.birthday_card import build_birthday_card
 from .store import JsonStore
 from .widgets_registry import WIDGET_ORDER, ZONE_IDS
+from .config import UNSPLASH_ACCESS_KEY, BACKGROUND_INTERVAL_SECONDS, DISPLAY_SECONDS
 
 api = Blueprint("api", __name__)
 
 _store = JsonStore()
+
+_last_bg_url = None
+_bg_lock = threading.Lock()
+
+
+def _fetch_one_background():
+    global _last_bg_url
+    if not UNSPLASH_ACCESS_KEY:
+        return
+    try:
+        resp = _requests.get(
+            "https://api.unsplash.com/photos/random",
+            params={"orientation": "landscape", "client_id": UNSPLASH_ACCESS_KEY},
+            timeout=10,
+        )
+        resp.raise_for_status()
+        url = resp.json()["urls"]["regular"]
+        with _bg_lock:
+            _last_bg_url = url
+    except Exception:
+        pass
+
+
+def _bg_loop():
+    """Bakgrundstråd: hämtar ny Unsplash-bild var BACKGROUND_INTERVAL_SECONDS sekunder."""
+    while True:
+        _fetch_one_background()
+        time.sleep(BACKGROUND_INTERVAL_SECONDS)
+
+
+if UNSPLASH_ACCESS_KEY:
+    threading.Thread(target=_bg_loop, daemon=True).start()
 _quote_provider = QuoteProvider()
 _weather_provider = WeatherProvider()
 _birthday_provider = BirthdayProvider(_store)
@@ -49,6 +85,13 @@ def _active_rotation_types():
                 continue
         active.append(widget_type)
     return active
+
+
+@api.route("/api/background")
+def get_background():
+    with _bg_lock:
+        url = _last_bg_url
+    return jsonify({"url": url, "interval_seconds": BACKGROUND_INTERVAL_SECONDS})
 
 
 @api.route("/api/card")

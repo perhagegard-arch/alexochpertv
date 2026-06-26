@@ -12,6 +12,10 @@ BACKGROUND_IMAGES = [
     if img.strip()
 ]
 
+UNSPLASH_ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY", "")
+BACKGROUND_INTERVAL_SECONDS = int(os.getenv("BACKGROUND_INTERVAL_SECONDS", "60"))
+BIRTHDAY_WINDOW_DAYS = int(os.getenv("BIRTHDAY_WINDOW_DAYS", "5"))
+
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-satt-din-egen-i-env")
 

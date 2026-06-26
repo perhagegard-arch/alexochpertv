@@ -4,6 +4,33 @@ import { renderBirthdayCard } from "./widgets/BirthdayWidget.js";
 
 const POLL_BUFFER_MS = 500;
 
+// --- Bakgrundslager (cross-fade) ---
+const bgLayers = [
+  document.getElementById("bg-a"),
+  document.getElementById("bg-b"),
+];
+let activeBg = 0;
+let currentBgUrl = null;
+
+async function refreshBackground() {
+  try {
+    const resp = await fetch("/api/background");
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    if (data.url && data.url !== currentBgUrl) {
+      currentBgUrl = data.url;
+      const next = 1 - activeBg;
+      bgLayers[next].style.backgroundImage = `url('${data.url}')`;
+      bgLayers[next].classList.add("visible");
+      bgLayers[activeBg].classList.remove("visible");
+      activeBg = next;
+    }
+  } catch (err) {
+    console.error("Kunde inte hämta bakgrund:", err);
+  }
+}
+
+// --- Mittrotation ---
 const layers = [
   document.getElementById("card-a"),
   document.getElementById("card-b"),
@@ -25,9 +52,22 @@ async function fetchCard() {
 }
 
 function applyCard(layer, card) {
-  layer.style.backgroundImage = card.background ? `url('${card.background}')` : "";
   const render = renderers[card.type];
   layer.innerHTML = render ? render(card.content, "hero") : "";
+  if (card.type === "quote") fitQuoteText(layer);
+}
+
+function fitQuoteText(layer) {
+  const text = layer.querySelector(".quote-text");
+  const card = layer.querySelector(".quote-card");
+  if (!text || !card) return;
+  // Starta på max-storlek och skala ner tills kortet ryms i lagret
+  let size = 32;
+  text.style.fontSize = `${size}px`;
+  while (card.scrollHeight > layer.clientHeight * 0.94 && size > 13) {
+    size -= 1;
+    text.style.fontSize = `${size}px`;
+  }
 }
 
 async function showNext() {
@@ -41,6 +81,8 @@ async function showNext() {
   }
 
   if (card.content?.id != null) lastId = card.content.id;
+
+  refreshBackground();
 
   const next = 1 - active;
   applyCard(layers[next], card);
