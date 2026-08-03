@@ -107,6 +107,32 @@ födelsedags-paste, födelsedagskort). Kvar: klocka i fast zon (Pass 2),
 ny-kund-kort och global-impact-kort (Pass 3), samt den mer generella
 regelmotorn.*
 
+## Driftsättning
+
+**2026-08-03: Testinstallation på `lab-38`** (`lab-38.lkpg.cendio.se`,
+`10.48.2.38`). Detta är ett labbrum, **inte bekräftat som den slutgiltiga
+TV-datorn** — kolla med Per/Alex innan mer arbete läggs på den specifika
+maskinen.
+
+- Kör som systemd-tjänst i **`/opt/fika-portal`** (inte i en hemkatalog!).
+  Anledning: SELinux (Enforcing på lab-38) blockerar tyst att systemd kör
+  kod märkt `user_home_t`, vilket gav `status=203/EXEC` för scriptet och
+  "Failed to load environment files" för `.env`. Att flytta till `/opt`
+  (standardkontext `usr_t`) löste det utan att röra SELinux-policyn.
+- Admin-lösenord och `SECRET_KEY` är slumpgenererade och satta i `.env` på
+  servern — **finns inte i repot**. Fråga Per om admin-lösenordet behövs.
+- Under installationen hittades och fixades två buggar (se git-historik):
+  `start_portal.sh` pekade på global `gunicorn` istället för venv:ets, och
+  `.env.example` refererade `bg_02.jpg` som aldrig lagts till i repot
+  (gav trasig bakgrundsbild ~50 % av gångerna).
+- TV:ns webbläsare ska peka på `http://10.48.2.38:8080/`.
+
+**Nästa steg:** bekräfta om lab-38 är rätt maskin permanent, eller om
+installationen ska göras om på den faktiska datorn vid fikarums-TV:n. Sätt
+i så fall webbläsaren där i kiosk-läge mot rätt adress. Därefter: fortsätta
+med kvarvarande Pass 2/3-kort (klocka, ny-kund, global-impact) enligt
+roadmapen ovan.
+
 ---
 
 ## Teknisk referens
