@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 cd "$(dirname "$0")"
-exec gunicorn \
+exec .venv/bin/gunicorn \
   --bind 0.0.0.0:8080 \
   --workers 1 \
   --threads 4 \
