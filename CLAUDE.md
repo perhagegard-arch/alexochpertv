@@ -103,48 +103,83 @@ Ny-kund-firande, global impact och klocka & datum är inte byggda än.*
   stretch-mål om tid finns (gym-påminnelse, jubileum).
 - **Efter semestern:** live-datakällor + övriga widgets ovan.
 
-*Status: kärnan i Pass 1–3 är byggd (rotationsmotor, citat-widget,
-femzonslayout, två render-lägen, väder, admin med toggles/zon-tilldelning/
-födelsedags-paste, födelsedagskort). Kvar: klocka i fast zon (Pass 2),
-ny-kund-kort och global-impact-kort (Pass 3), samt den mer generella
-regelmotorn.*
+*Status 2026-09-24: kärnan i Pass 1–3 är byggd (rotationsmotor, citat-widget,
+två render-lägen, väder, admin med toggles/zon-tilldelning/födelsedags-paste,
+födelsedagskort). Layouten förenklades 2026-09-24 från fem till tre zoner
+(två fasta till vänster + stor citatpanel). Kvar: klocka, ny-kund-kort och
+global-impact-kort, samt den mer generella regelmotorn.*
 
 ## Driftsättning
 
-**2026-09-24: Ominstallerad på `lab-38`** (`lab-38.lkpg.cendio.se`,
-`10.48.2.38`) med tre-zons-layouten. Installationen från 2026-08-03 hade
-försvunnit (katalog, tjänst, SSH-nyckel — maskinen rensades troligen vid
-omstarten 2026-09-07). **Labbmaskiner kan rensas — lab-38 är inte bekräftad
-som permanent TV-dator.** Om TV-vyn plötsligt är borta: installera om enligt
-stegen nedan.
+**Live: `http://10.48.2.38:8080/`** på `lab-38` (`lab-38.lkpg.cendio.se`),
+admin på `/admin`. Kör commit `f35c790`+ (tre-zons-layouten), ominstallerad
+2026-09-24.
 
-- Koden kopieras med `git archive main | ssh ... tar -x` (ingen git-klon på
-  servern, så inga GitHub-nycklar behövs där). `DEPLOYED_COMMIT` i
-  `/opt/fika-portal` visar vilken commit som körs.
-- Port 8080 är öppnad i firewalld (`--permanent`).
-- Widget-/zoninställningar och födelsedagar sätts via admin-panelen och
-  sparas i `data/state.json` på servern — de försvinner om maskinen rensas.
+**Viktigt: lab-38 är en labbmaskin och kan rensas.** Installationen från
+2026-08-03 försvann helt (katalog, tjänst, SSH-nyckel — troligen vid
+omstarten 2026-09-07). Inte bekräftad som permanent TV-dator. Om TV-vyn är
+borta: installera om enligt nedan.
 
-**2026-08-03: Första testinstallationen på `lab-38`.**
+### Så är den uppsatt
 
-- Kör som systemd-tjänst i **`/opt/fika-portal`** (inte i en hemkatalog!).
-  Anledning: SELinux (Enforcing på lab-38) blockerar tyst att systemd kör
-  kod märkt `user_home_t`, vilket gav `status=203/EXEC` för scriptet och
-  "Failed to load environment files" för `.env`. Att flytta till `/opt`
-  (standardkontext `usr_t`) löste det utan att röra SELinux-policyn.
-- Admin-lösenord och `SECRET_KEY` är slumpgenererade och satta i `.env` på
-  servern — **finns inte i repot**. Fråga Per om admin-lösenordet behövs.
-- Under installationen hittades och fixades två buggar (se git-historik):
-  `start_portal.sh` pekade på global `gunicorn` istället för venv:ets, och
-  `.env.example` refererade `bg_02.jpg` som aldrig lagts till i repot
-  (gav trasig bakgrundsbild ~50 % av gångerna).
-- TV:ns webbläsare ska peka på `http://10.48.2.38:8080/`.
+- **Inloggning:** `ssh -i ~/.ssh/id_ed25519_cendio claude@lab-38` (använd
+  kortnamnet `lab-38` — det är det som finns i `known_hosts`). `claude` har
+  sudo med lösenord.
+- **Kod:** `/opt/fika-portal` (inte hemkatalog!). SELinux är Enforcing och
+  blockerar tyst att systemd kör kod märkt `user_home_t` (`status=203/EXEC`,
+  "Failed to load environment files"). `/opt` ger `usr_t` och fungerar.
+- **Ingen git-klon på servern** — koden kopieras med `git archive`, så inga
+  GitHub-nycklar behövs där. `DEPLOYED_COMMIT` visar vilken commit som körs.
+- **Tjänst:** `fika-portal.service` (systemd, enabled, `Restart=always`),
+  gunicorn från `.venv` på `0.0.0.0:8080`.
+- **Brandvägg:** port 8080/tcp öppnad permanent i firewalld.
+- **Hemligheter:** `.env` (chmod 600) med slumpat `ADMIN_PASSWORD` och
+  `SECRET_KEY` samt Unsplash-nyckeln — **finns inte i repot**. Fråga Per om
+  admin-lösenordet behövs.
+- **Innehåll/inställningar** (widget-toggles, zoner, födelsedagslistan) ligger
+  i `data/state.json` på servern och försvinner om maskinen rensas. Nuvarande
+  uppsättning: mitten roterar bara citat, vänster topp = väder, vänster
+  botten = födelsedagar. Lokala `data/state.json` hos Per är samma — kan
+  laddas upp igen via admin-API:t.
 
-**Nästa steg:** bekräfta om lab-38 är rätt maskin permanent, eller om
-installationen ska göras om på den faktiska datorn vid fikarums-TV:n. Sätt
-i så fall webbläsaren där i kiosk-läge mot rätt adress. Därefter: fortsätta
-med kvarvarande Pass 2/3-kort (klocka, ny-kund, global-impact) enligt
-roadmapen ovan.
+### Uppdatera med ny kod (från repot lokalt)
+
+```bash
+git archive --format=tar main | ssh -i ~/.ssh/id_ed25519_cendio claude@lab-38 \
+  "tar -xf - -C /opt/fika-portal && echo $(git rev-parse --short main) > /opt/fika-portal/DEPLOYED_COMMIT"
+ssh -t -i ~/.ssh/id_ed25519_cendio claude@lab-38 'sudo systemctl restart fika-portal'
+```
+
+`tar -x` skriver över kodfilerna men rör inte `.env`, `.venv` eller `data/`.
+Kör `.venv/bin/pip install -r requirements.txt` om beroenden ändrats.
+
+### Installera om från början
+
+1. `sudo mkdir -p /opt/fika-portal && sudo chown claude:claude /opt/fika-portal`
+2. Kopiera koden med `git archive` enligt ovan.
+3. `cd /opt/fika-portal && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt`
+4. `cp .env.example .env && chmod 600 .env`, fyll i `ADMIN_PASSWORD`,
+   `SECRET_KEY` (`python3 -c "import secrets;print(secrets.token_hex(32))"`)
+   och `UNSPLASH_ACCESS_KEY`.
+5. `./install_service.sh`
+6. `sudo firewall-cmd --permanent --add-port=8080/tcp && sudo firewall-cmd --reload`
+7. Logga in på `/admin` och sätt zoner/toggles + klistra in födelsedagar.
+
+### Historik
+
+- **2026-08-03:** första testinstallationen. Två buggar fixade:
+  `start_portal.sh` använde global `gunicorn` istället för venv:ets, och
+  `.env.example` refererade `bg_02.jpg` som aldrig lagts till (trasig
+  bakgrund ~50 % av gångerna).
+- **2026-09-24:** ominstallerad efter att maskinen rensats, med ny layout.
+
+### Nästa steg
+
+1. Kolla med labbansvarig (eller Alex) om lab-38 får stå orörd, annars flytta
+   till den riktiga datorn vid fikarums-TV:n och sätt webbläsaren i
+   kiosk-läge mot rätt adress.
+2. Byt lösenordet för `claude` på lab-38 (det har delats i en chatt).
+3. Fortsätt med kvarvarande kort: klocka, ny-kund, global-impact.
 
 ---
 
@@ -159,7 +194,7 @@ backend/
   admin.py             # Blueprint: /admin (sida) + /admin/api/* (login, widgets, zones, birthdays)
   auth.py              # login_required-decorator + lösenordskontroll (session-baserad)
   store.py             # JsonStore — läser/skriver data/state.json
-  widgets_registry.py  # Delad källa: WIDGET_ORDER/WIDGETS samt ZONES/ZONE_IDS (de fyra fasta zonerna)
+  widgets_registry.py  # Delad källa: WIDGET_ORDER/WIDGETS samt ZONES/ZONE_IDS (de två fasta zonerna till vänster)
   birthdays.py          # parse_birthdays(), upcoming_within(), birthdays_today() — ren parsing-logik
   config.py            # Läser .env: QUOTES_API_URL, DISPLAY_SECONDS, BACKGROUND_IMAGES, ADMIN_PASSWORD, SECRET_KEY
   rules.py             # (stub) Regelmotor — generell regelmotor ej byggd än
@@ -211,7 +246,7 @@ python -m backend.main # → http://localhost:8080 (admin: /admin)
 }
 ```
 
-**`GET /api/zone/<zone_id>?ignore=<id>`** — returnerar kortet för den widget som är tilldelad en fast zon (`zone_id` ∈ `left-top`/`left-bottom`/`right-top`/`right-bottom`). Samma kort-form som ovan, eller `{"type": "empty", ...}` om zonen saknar tilldelning. Frontend renderar alltid i `"compact"`-läge för dessa.
+**`GET /api/zone/<zone_id>?ignore=<id>`** — returnerar kortet för den widget som är tilldelad en fast zon (`zone_id` ∈ `left-top`/`left-bottom`). Samma kort-form som ovan, eller `{"type": "empty", ...}` om zonen saknar tilldelning. Frontend renderar alltid i `"compact"`-läge för dessa.
 
 ### Admin-panel
 
@@ -220,7 +255,7 @@ python -m backend.main # → http://localhost:8080 (admin: /admin)
 - `POST /admin/api/login` `{password}` / `POST /admin/api/logout` / `GET /admin/api/session`
 - `GET /admin/api/widgets` → lista widgets med `enabled`-state för **mitt-rotationen** (byggd från `widgets_registry.WIDGETS` + `store.py`)
 - `POST /admin/api/widgets/<id>/toggle` `{enabled: bool}`
-- `GET /admin/api/zones` → lista de fyra fasta zonerna med vilken widget (eller `null`) som är tilldelad
+- `GET /admin/api/zones` → lista de två fasta zonerna med vilken widget (eller `null`) som är tilldelad
 - `POST /admin/api/zones/<zone_id>` `{widget: "quote"|"weather"|"birthday"|null}`
 - `GET /admin/api/birthdays` → `{raw: "..."}` (senast sparade inklistrade text)
 - `POST /admin/api/birthdays` `{raw: "..."}` → sparar och returnerar förhandsgranskning: `{count, today: [namn...], invalid: [rader...]}`
