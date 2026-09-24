@@ -9,7 +9,5 @@ WIDGETS = {
 ZONES = {
     "left-top": "Vänster topp",
     "left-bottom": "Vänster botten",
-    "right-top": "Höger topp",
-    "right-bottom": "Höger botten",
 }
 ZONE_IDS = list(ZONES.keys())

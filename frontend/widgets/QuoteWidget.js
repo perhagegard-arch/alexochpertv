@@ -1,13 +1,16 @@
 export function renderQuoteCard(content, mode = "hero") {
   const company = content.company
-    ? `<p class="quote-company">${esc(content.company)}</p>`
+    ? `<span class="quote-company"> · ${esc(content.company)}</span>`
     : "";
   const compactClass = mode === "compact" ? " compact" : "";
   return `
     <div class="quote-card${compactClass}">
-      <p class="quote-text">${esc(content.quote)}</p>
-      <p class="quote-author">${esc(content.author)}</p>
-      ${company}
+      <div class="quote-body">
+        <div class="quote-mark" aria-hidden="true">“</div>
+        <p class="quote-text">${esc(content.quote)}</p>
+        <div class="quote-divider"></div>
+        <p class="quote-author">${esc(content.author)}${company}</p>
+      </div>
     </div>
   `;
 }

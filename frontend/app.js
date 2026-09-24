@@ -60,11 +60,15 @@ function applyCard(layer, card) {
 function fitQuoteText(layer) {
   const text = layer.querySelector(".quote-text");
   const card = layer.querySelector(".quote-card");
-  if (!text || !card) return;
-  // Starta på max-storlek och skala ner tills kortet ryms i lagret
-  let size = 32;
+  const body = layer.querySelector(".quote-body");
+  if (!text || !card || !body) return;
+  // Kortet fyller alltid panelen, så vi mäter innehållet mot ytan innanför paddingen
+  const style = getComputedStyle(card);
+  const available =
+    card.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+  let size = 56;
   text.style.fontSize = `${size}px`;
-  while (card.scrollHeight > layer.clientHeight * 0.94 && size > 13) {
+  while (body.offsetHeight > available && size > 16) {
     size -= 1;
     text.style.fontSize = `${size}px`;
   }
@@ -96,7 +100,7 @@ async function showNext() {
 
 showNext();
 
-const ZONE_IDS = ["left-top", "left-bottom", "right-top", "right-bottom"];
+const ZONE_IDS = ["left-top", "left-bottom"];
 const zoneLastId = {};
 
 async function showZone(zoneId) {

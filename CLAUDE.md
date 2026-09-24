@@ -33,17 +33,19 @@ Bas-URL ska vara konfigurerbar. I den här utvecklingsmiljön är den satt via
 `.env` (`QUOTES_API_URL`) till `http://quotes.lkpg.cendio.se/api/quotes/random`
 — den publika adressen för samma quoted-tjänst (se `backend/providers/quotes.py`).
 
-## Skärmlayout: fem zoner
+## Skärmlayout: tre zoner
 
-- **Mitten** – stor, ROTERAR mellan widgets. Här bor "ögonblicken": citat,
-  födelsedag, ny kund, m.m.
-- **Fyra fasta zoner** runtom (vänster: två staplade, höger: två staplade) –
-  visar var sin vald widget, roterar inte. Här bor alltid-relevant glasbart:
-  klocka, väder, nästa händelse, global impact.
+- **Mitten** – en stor glaspanel (4/5 av bredden, rundade hörn) som ROTERAR
+  mellan widgets. Här bor "ögonblicken": citat, födelsedag, ny kund, m.m.
+  Korten i mitten har ingen egen bakgrund — panelen är bakgrunden.
+- **Två fasta zoner** till vänster (staplade, 1/5 av bredden) – visar var sin
+  vald widget, roterar inte. Här bor alltid-relevant glasbart:
+  klocka, väder, nästa händelse, global impact. (Högerzonerna togs bort
+  2026-09-24 för att ge citaten mer plats.)
 - Fasta zoner med en widget som inte alltid har innehåll MÅSTE ha reservinnehåll
   så zonen aldrig blir tom.
 
-*Implementerat i `frontend/index.html` (CSS-grid med `zone-center` + fyra
+*Implementerat i `frontend/index.html` (CSS-grid med `zone-center` + två
 `.zone`-divar), `style.css` och `app.js` (`showNext()` för mitten,
 `showZone()` per fast zon) — se Teknisk referens nedan för detaljer.*
 
