@@ -111,10 +111,21 @@ regelmotorn.*
 
 ## Driftsättning
 
-**2026-08-03: Testinstallation på `lab-38`** (`lab-38.lkpg.cendio.se`,
-`10.48.2.38`). Detta är ett labbrum, **inte bekräftat som den slutgiltiga
-TV-datorn** — kolla med Per/Alex innan mer arbete läggs på den specifika
-maskinen.
+**2026-09-24: Ominstallerad på `lab-38`** (`lab-38.lkpg.cendio.se`,
+`10.48.2.38`) med tre-zons-layouten. Installationen från 2026-08-03 hade
+försvunnit (katalog, tjänst, SSH-nyckel — maskinen rensades troligen vid
+omstarten 2026-09-07). **Labbmaskiner kan rensas — lab-38 är inte bekräftad
+som permanent TV-dator.** Om TV-vyn plötsligt är borta: installera om enligt
+stegen nedan.
+
+- Koden kopieras med `git archive main | ssh ... tar -x` (ingen git-klon på
+  servern, så inga GitHub-nycklar behövs där). `DEPLOYED_COMMIT` i
+  `/opt/fika-portal` visar vilken commit som körs.
+- Port 8080 är öppnad i firewalld (`--permanent`).
+- Widget-/zoninställningar och födelsedagar sätts via admin-panelen och
+  sparas i `data/state.json` på servern — de försvinner om maskinen rensas.
+
+**2026-08-03: Första testinstallationen på `lab-38`.**
 
 - Kör som systemd-tjänst i **`/opt/fika-portal`** (inte i en hemkatalog!).
   Anledning: SELinux (Enforcing på lab-38) blockerar tyst att systemd kör
